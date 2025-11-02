@@ -3,6 +3,7 @@ from os import *
 from pathlib import *
 import stat
 
+
 def ls(args):
     long_flag = '-l' in args
     paths = [arg for arg in args if arg != '-l']
@@ -21,12 +22,14 @@ def ls(args):
         res.insert(0, f'total {total}')
         return [s for s in res]
 
+
 def cd(args):
     if len(args) > 1: raise ValueError("cd: too many arguments")
     path = Path(args[0]).expanduser().resolve()
     if not path.exists(): raise FileNotFoundError(f"cd: {args[0]}: No such file or directory")
     chdir(path)
     return ['']
+
 
 def cat(args):
     info_from_files = []
@@ -58,17 +61,18 @@ def cp(args):
     return ['']
 
 
-
 def mv(args):
     if len(args) < 2: raise ValueError(f"mv: missing destination file operand after '{args[0]}'")
-    if len(args) == 2:
-        mv_from = args[0]
-        mv_to = args[1]
-        if not Path(mv_from).expanduser().resolve().exists(): raise FileNotFoundError(f"mv: {mv_from}: No such file or directory")
-        try: shutil.move(str(mv_from), str(mv_to))
-        except PermissionError: raise PermissionError(f"mv: cannot move '{mv_from}' to '{mv_to}': Permission denied")
-        except Exception: raise ValueError('some error with command mv')
+    if len(args) >= 2:
+        mv_to = args[-1]
+        for i in args[:-1]:
+            mv_from = i
+            if not Path(mv_from).expanduser().resolve().exists(): raise FileNotFoundError(f"mv: {mv_from}: No such file or directory")
+            try: shutil.move(str(mv_from), str(mv_to))
+            except PermissionError: raise PermissionError(f"mv: cannot move '{mv_from}' to '{mv_to}': Permission denied")
+            except Exception: raise ValueError('some error with command mv')
     return ['']
+
 
 def rm(args):
     r_flag = args[0] == '-r'
@@ -101,7 +105,9 @@ command_dict ={
 }
 
 
-def solving(commands):
-    args = commands[1:]
-    command = commands[0]
+def solving(command):
+    if command[0] not in command_dict: raise ValueError('incorrect command')
+    if command[0] in ['cd', 'cat', 'cp', 'mv', 'rm'] and len(command) == 1: raise ValueError(f'{command[0]}: missing file operand')
+    args = command[1:]
+    command = command[0]
     return command_dict[command](args)
