@@ -1,9 +1,6 @@
-import shutil
+import shutil, zipfile, tarfile, stat, re
 from os import *
 from pathlib import *
-import stat
-import zipfile
-import tarfile
 
 
 def ls(args):
@@ -59,6 +56,12 @@ def cp(args):
                 copy_from = Path(odj).expanduser().resolve()
                 if copy_from.is_dir(): raise ValueError(f"cp: -r not specified; omitting directory {copy_from.name}")
                 else: shutil.copy(copy_from, copy_to)
+    elif copy_to.is_file():
+        for odj in args[:-1]:
+            copy_from = Path(odj).expanduser().resolve()
+            if copy_from.is_dir(): raise ValueError(f"cp: -r not specified; omitting directory {copy_from.name}")
+            else: shutil.copy(copy_from, copy_to)
+    else: raise ValueError(f'cp: {copy_to.name} not a file or a directory')
     return ['']
 
 
@@ -103,7 +106,8 @@ def zip(args):
     with zipfile.ZipFile(zip_to, 'w', zipfile.ZIP_DEFLATED) as bash_zip:
         if zip_from.is_dir():
             for file in zip_from.rglob('*'): bash_zip.write(file, file.relative_to(zip_from))
-        else: bash_zip.write(zip_from, zip_from.name)
+        elif zip_from.is_file(): bash_zip.write(zip_from, zip_from.name)
+        else: raise ValueError(f'zip: {zip_from.name} not a file or a directory')
     return ['']
 
 def unzip(args):
@@ -131,6 +135,29 @@ def untar(args):
     with tarfile.open(untar_from, "r:*") as bash_tar: bash_tar.extractall(path=untar_to)
     return ['']
 
+def grep(args):
+    path = Path(args[-1]).expanduser().resolve()
+    if not path.exists(): raise FileNotFoundError(f"grep: cannot grep '{path.name}': No such file or directory")
+    r_flag = args[0] == '-r'
+    if r_flag: args.remove('-r')
+    i_flag = args[0] == '-i'
+    if i_flag: args.remove('-i'); i_flag = re.IGNORECASE
+    pattern = args[0]
+    pattern = re.compile(pattern, i_flag)
+    files = []
+    res = []
+    if path.is_file(): files = [path]
+    elif path.is_dir():
+        if r_flag: files = path.rglob('*')
+        else: files = path.glob('*')
+    else: raise ValueError(f'grep: {path.name} not a file or a directory')
+
+    for file in files:
+        if file.is_file():
+            with file.open('r', encoding='utf-8') as f:
+                res = [line.strip() for line in f if pattern.search(line)]
+    return res
+
 
 command_dict ={
     'ls': ls,
@@ -142,7 +169,8 @@ command_dict ={
     'zip': zip,
     'unzip': unzip,
     'tar': tar,
-    'untar': untar
+    'untar': untar,
+    'grep': grep
 }
 
 
