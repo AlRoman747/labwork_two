@@ -48,9 +48,9 @@ def main():
         except IsADirectoryError as e:
             print(e)
             logging.info(f'ERROR: {e}')
-        # except Exception as e:
-        #     print(f'Bash error: {e}')
-        #     logging.info(f'ERROR: {e}')
+        except Exception as e:
+             print(f'Bash error: {e}')
+             logging.info(f'ERROR: {e}')
 
 
 if __name__ == "__main__":
