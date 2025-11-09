@@ -56,6 +56,7 @@ class TestCommandFunctions:
         """Удаление файла в .trash."""
         src = env / "test"
         trash_dir = env / ".trash"
+        assert '/' != str(src); assert '..' != str(src)
         rm([src])
         trashed = next(trash_dir.glob("test*"), None)
         assert trashed and trashed.exists()
