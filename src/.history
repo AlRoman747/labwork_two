@@ -1,3 +1,2 @@
 1 ls
-2 rm tt
-3 ls
+2 ls -l

@@ -97,7 +97,7 @@ def rm(args):
     """Удаление(перемещение в корзину) файла с сохранением изначального пути файла"""
     global rm_from_path
     if args[-1] in ['..', '/']:
-        raise ValueError('you cannot del parents dir')
+        raise ValueError('you cannot del parents dir') # проверка на удаление корня
     r_flag = args[0] == '-r'
     trash_dir = Path(".trash").expanduser().resolve()
     if r_flag:
